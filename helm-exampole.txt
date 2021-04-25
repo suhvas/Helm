@@ -1,0 +1,110 @@
+Installation:
+
+Install and configure Helm Package Manager
+    wget https://storage.googleapis.com/kubernetes-helm/helm-v2.11.0-linux-amd64.tar.gz
+    tar -xzvf helm-v2.11.0-linux-amd64.tar.gz
+    sudo mv linux-amd64/helm /usr/local/bin/helm
+
+------------kubernetes helm--------------
+vi helm-rbac.yaml
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tiller
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: tiller
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+  - kind: ServiceAccount
+    name: tiller
+    namespace: kube-system
+    
+  
+kubectl create -f helm-rbac.yaml    
+#helm init --service-account tiller
+helm init --service-account tiller --output yaml | sed 's@apiVersion: extensions/v1beta1@apiVersion: apps/v1@' | sed 's@  replicas: 1@  replicas: 1\n  selector: {"matchLabels": {"app": "helm", "name": "tiller"}}@' | kubectl apply -f -
+kubectl get deployment --namespace kube-system 
+
+
+====================================================================================================================================
+
+WITH NAMESPACE
+
+kubectl create namespace myns
+
+helm install --name=my-web-app  --namespace=myns my-web-app --set image.repository=suhvas/web-app --set image.tag=1.0 --set namespace=myns
+
+helm upgrade --wait --recreate-pods --namespace=myns --set image.repository=suhvas/web-app --set image.tag=1.0 --set namespace=myns my-web-app my-web-app
+
+
+kubectl get deployment --namespace=myns
+kubectl get pods --namespace=myns
+kubectl get service --namespace=myns
+
+kubectl get pods --namespace=myns
+kubectl exec -it hello-world-5b99cf55bb-f4ng5 --namespace=myns /bin/bash
+
+
+helm list charts
+helm delete my-web-app
+
+kubectl delete namespace myns
+
+ 1010  helm list charts
+ 1011  helm delete my-web-app
+ 1012  kubectl create namespace myns
+ 1013  helm install --name=my-web-app  --namespace=myns my-web-app --set image.repository=suhvas/web-app --set image.tag=1.0 --set namespace=myns
+ 1014  kubectl delete namespace myns
+ 1015  helm del --purge my-web-app
+ 1016  kubectl create namespace myns
+ 1017  helm install --name=my-web-app  --namespace=myns my-web-app --set image.repository=suhvas/web-app --set image.tag=1.0 --set namespace=myns
+ 1018  helm upgrade --wait --recreate-pods --namespace=myns --set image.repository=suhvas/web-app --set image.tag=1.0 --set namespace=myns my-web-app my-web-app
+ 1019  kubectl get deployment --namespace=myns
+ 1020  kubectl get pods --namespace=myns
+ 1021  kubectl get service --namespace=myns
+
+====================================================================================================================================
+
+WITHOUT NAMESPACE
+
+helm install --name=my-web-app  my-web-app --set image.repository=suhvas/web-app --set image.tag=1.0 
+
+helm upgrade --wait --recreate-pods --set image.repository=suhvas/web-app --set image.tag=2.0 my-web-app my-web-app
+
+
+kubectl get deployment 
+kubectl get pods 
+kubectl get service 
+
+kubectl get pods 
+kubectl exec -it hello-world-5b99cf55bb-f4ng5  /bin/bash
+
+
+helm list charts
+helm delete my-web-app
+
+kubectl delete namespace myns
+
+-----------
+ 1010  helm list charts
+ 1011  helm delete my-web-app
+ 1012  
+ 1013  helm install --name=my-web-app   my-web-app --set image.repository=suhvas/web-app --set image.tag=1.0
+ 1014  
+ 1015  helm del --purge my-web-app
+ 1016  
+ 1017  helm install --name=my-web-app   my-web-app --set image.repository=suhvas/web-app --set image.tag=1.0
+ 1018  helm upgrade --wait --recreate-pods --set image.repository=suhvas/web-app --set image.tag=1.0 my-web-app my-web-app
+ 1019  kubectl get deployment 
+ 1020  kubectl get pods 
+ 1021  kubectl get service 
+
+====================================================================================================================================
